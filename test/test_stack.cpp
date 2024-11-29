@@ -42,3 +42,12 @@ TEST(stack, pop) {
 	EXPECT_EQ(s.top(), 2);
 	EXPECT_EQ(s.size(), 2);
 }
+
+TEST(stack, push_pop_push) {
+	Stack<int, std::vector> s;
+	s.push(1);
+	s.push(2);
+	s.pop();
+	s.push(3);
+	EXPECT_EQ(s.top(), 3);
+}
