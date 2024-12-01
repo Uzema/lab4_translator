@@ -31,6 +31,30 @@ public:
 					st.pop();
 				}
 			}
+			else if (lexems[i]->GetType() == "Add" || lexems[i]->GetType() == "Sub" || \
+				lexems[i]->GetType() == "Mul" || lexems[i]->GetType() == "Div") {
+				while (!st.empty()) {
+					Operators* op1 = dynamic_cast<Operators*>(lexems[i]);
+					Operators* op2 = dynamic_cast<Operators*>(stackItem);
+					if (op1->GetPriority() <= op2->GetPriority()) {
+						postfix.push_back(stackItem);
+					}
+					else {
+						st.push(stackItem);
+						break;
+					}
+				 }
+				st.push(lexems[i]);
+				break;
+			}
+			else {
+				//todo
+			}
+		}//for
+		while (!st.empty()) {
+			stackItem = st.top();
+			st.pop();
+			postfix.push_back(stackItem);
 		}
 	}
 	void Calculate() {}
@@ -90,6 +114,9 @@ class Operators : public Term {
 public:
 	string GetType() {
 		return "Operators";
+	}
+	virtual int GetPriority() {
+		return 0;
 	}
 };
 
