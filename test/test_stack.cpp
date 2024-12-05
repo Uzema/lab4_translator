@@ -1,4 +1,5 @@
 #include "stack.h"
+#include "term.h"
 #include <gtest.h>
 #include <vector>
 
@@ -50,4 +51,14 @@ TEST(stack, push_pop_push) {
 	s.pop();
 	s.push(3);
 	EXPECT_EQ(s.top(), 3);
+}
+
+TEST(translator, stuff) {
+	//std::string meow;
+	std::cout << "print your thing: ";
+	//std::cin >> meow;
+	//std::getline(std::cin, meow);
+	Translator thing("3+5*2");
+	thing.everything();
+	EXPECT_EQ(1, 1);
 }

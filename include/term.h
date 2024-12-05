@@ -4,67 +4,24 @@
 #include "stack.h"
 #include <vector>
 #include <string>
+#include <iostream>
 
 using namespace std;
 
-
-class Translator {
-	string infix;
-	vector<Term*> postfix;
-	vector<Term*> lexems;
-	
-public:
-	void Parse() {}
-	void ToPostFix() {
-		Parse();
-		Stack<Term*, vector> st;
-		Term* stackItem;
-		for (int i = 0; i < lexems.size(); i++) {
-			if (lexems[i]->GetType() == "OpeningBracket") {
-				st.push(lexems[i]);
-			}
-			else if (lexems[i]->GetType() == "ClosingBracket") { // :3
-				stackItem = st.top();
-				while (stackItem->GetType() != "OpeningBracket") {
-					postfix.push_back(stackItem);
-					stackItem = st.top();
-					st.pop();
-				}
-			}
-			else if (lexems[i]->GetType() == "Add" || lexems[i]->GetType() == "Sub" || \
-				lexems[i]->GetType() == "Mul" || lexems[i]->GetType() == "Div") {
-				while (!st.empty()) {
-					Operators* op1 = dynamic_cast<Operators*>(lexems[i]);
-					Operators* op2 = dynamic_cast<Operators*>(stackItem);
-					if (op1->GetPriority() <= op2->GetPriority()) {
-						postfix.push_back(stackItem);
-					}
-					else {
-						st.push(stackItem);
-						break;
-					}
-				 }
-				st.push(lexems[i]);
-				break;
-			}
-			else {
-				//todo
-			}
-		}//for
-		while (!st.empty()) {
-			stackItem = st.top();
-			st.pop();
-			postfix.push_back(stackItem);
-		}
-	}
-	void Calculate() {}
+enum class State {
+	S0,
+	Q1,
+	Q2,
+	Q3,
+	Q4,
+	ERROR
 };
 
 class Term {
 
 public:
 	virtual ~Term() {}
-	string GetType() {
+	virtual string GetType() {
 		return "Term";
 	}
 };
@@ -82,6 +39,10 @@ class Number : public Operand {
 public:
 	string GetType() {
 		return "Number";
+	}
+
+	virtual double GetValue() {
+		return 0;
 	}
 };
 
@@ -107,6 +68,14 @@ public:
 	double GetValue() {
 		return this->value;
 	}
+
+	Floating() {
+		this->value = 0;
+	}
+
+	Floating(double number) {
+		this->value = number;
+	}
 };
 
 class Operators : public Term {
@@ -123,6 +92,8 @@ public:
 class Add : public Operators {
 	int priority = 1;
 public:
+	Add() {}
+
 	string GetType() {
 		return "Add";
 	}
@@ -145,6 +116,8 @@ public:
 class Mul : public Operators {
 	int priority = 2;
 public:
+	Mul() {}
+
 	string GetType() {
 		return "Mul";
 	}
@@ -156,6 +129,8 @@ public:
 class Div : public Operators {
 	int priority = 2;
 public:
+	Div() {}
+
 	string GetType() {
 		return "Div";
 	}
@@ -187,5 +162,222 @@ public:
 		return "ClosingBracket";
 	}
 };
+
+
+class Translator {
+	string infix;
+	vector<Term*> postfix;
+	vector<Term*> lexems;
+
+public:
+	Translator(string infix_string) {
+		this->infix = infix_string;
+	}
+
+	void everything() {
+		if (StringAnalyze() == true) {
+			ToPostFix();
+			double answer;
+			answer = Calculate();
+			cout << "and the answer is :" << answer;
+		}
+		else {
+			cout << "string analyze says you're a bad person";
+		}
+	}
+
+	bool StringAnalyze() {
+		if (infix.size() == 0) {
+			throw "empty string";
+		}
+
+		State ka = State::S0;
+		string strNum = "";
+
+		for (int i = 0; i < infix.size(); i++) {
+			int k = 0;
+
+			//cout << strNum << endl;
+
+			switch (ka) {
+
+			case State::S0: if (infix[i] >= '0' && infix[i] <= '9') {
+				ka = State::Q1;
+				strNum = "";
+				strNum += infix[i];
+			}
+						  else {
+				ka = State::ERROR;
+			}
+						  break;
+
+			case State::Q1: if (infix[i] >= '0' && infix[i] <= '9') {
+				ka = State::Q1;
+				strNum += infix[i];
+			}
+						  else if (infix[i] == '.') {
+				ka = State::Q2;
+				strNum += infix[i];
+			}
+						  else if (infix[i] == '+' || infix[i] == '-' || infix[i] == '*' || infix[i] == '/') {
+				ka = State::Q4;
+				double number = stod(strNum);
+				lexems.push_back(new Floating(number));
+				strNum = "";
+				switch (infix[i]) {
+				case ('+'): lexems.push_back(new Add());
+					break;
+				case ('-'): lexems.push_back(new Sub());
+					break;
+				case ('*'): lexems.push_back(new Mul());
+					break;
+				case ('/'): lexems.push_back(new Div());
+					break;
+				}
+			}
+						  else {
+				ka = State::ERROR;
+			}
+						  break;
+
+			case State::Q2: if (infix[i] >= '0' && infix[i] <= '9') {
+				ka = State::Q2;
+				strNum += infix[i];
+			}
+						  else if (infix[i] == '+' || infix[i] == '-' || infix[i] == '*' || infix[i] == '/') {
+				ka = State::Q4;
+				double number = stod(strNum);
+				lexems.push_back(new Floating(number));
+				strNum = "";
+				switch (infix[i]) {
+				case ('+'): lexems.push_back(new Add());
+					break;
+				case ('-'): lexems.push_back(new Sub());
+					break;
+				case ('*'): lexems.push_back(new Mul());
+					break;
+				case ('/'): lexems.push_back(new Div());
+					break;
+				}
+			}
+						  else {
+				ka = State::ERROR;
+			}
+						  break;
+
+			case State::Q3: break;
+			case State::Q4: if (infix[i] >= '0' && infix[i] <= '9') {
+				ka = State::Q1;
+				strNum = "";
+				strNum += infix[i];
+				if (i == infix.size() - 1) {
+					double number = stod(strNum);
+					lexems.push_back(new Floating(number));
+					strNum = "";
+				}
+			}
+						  else {
+				ka = State::ERROR;
+			}
+						  break;
+			default: ka = State::ERROR;
+				break;
+
+			}
+		}//for
+		return (ka != State::ERROR);
+	}
+
+	void ToPostFix() {
+		//Parse();
+		Stack<Term*, vector> st;
+		Term* stackItem;
+		for (int i = 0; i < lexems.size(); i++) {
+			if (lexems[i]->GetType() == "OpeningBracket") {
+				st.push(lexems[i]);
+			}
+			else if (lexems[i]->GetType() == "ClosingBracket") {
+				stackItem = st.top();
+				st.pop();
+				while (stackItem->GetType() != "OpeningBracket") {
+					postfix.push_back(stackItem);
+					stackItem = st.top();
+					st.pop();
+				}
+			}
+			else if (lexems[i]->GetType() == "Add" || lexems[i]->GetType() == "Sub" || \
+				lexems[i]->GetType() == "Mul" || lexems[i]->GetType() == "Div") {
+				while (!st.empty()) {
+					stackItem = st.top();
+					st.pop();
+					Operators* op1 = dynamic_cast<Operators*>(lexems[i]);
+					Operators* op2 = dynamic_cast<Operators*>(stackItem);
+					if (op1->GetPriority() <= op2->GetPriority()) {
+						postfix.push_back(stackItem);
+					}
+					else {
+						st.push(stackItem);
+						break;
+					}
+				}
+				st.push(lexems[i]);
+			}
+			else {
+				postfix.push_back(lexems[i]);
+			}
+		}//for
+		while (!st.empty()) {
+			stackItem = st.top();
+			st.pop();
+			postfix.push_back(stackItem);
+		}
+	}
+
+	double Calculate() {
+		Stack<double, vector> st;
+		double leftOperand, rightOperand;
+		for (int i = 0; i < postfix.size(); i++) {
+			cout << postfix[i]->GetType() << endl;
+			if (postfix[i]->GetType() == "Add") {
+				rightOperand = st.top();
+				st.pop();
+				leftOperand = st.top();
+				st.pop();
+				st.push(leftOperand + rightOperand);
+			}
+			else if (postfix[i]->GetType() == "Sub") {
+				rightOperand = st.top();
+				st.pop();
+				leftOperand = st.top();
+				st.pop();
+				st.push(leftOperand - rightOperand);
+			}
+			else if (postfix[i]->GetType() == "Mul") {
+				rightOperand = st.top();
+				st.pop();
+				leftOperand = st.top();
+				st.pop();
+				st.push(leftOperand * rightOperand);
+			}
+			else if (postfix[i]->GetType() == "Div") {
+				rightOperand = st.top();
+				st.pop();
+				leftOperand = st.top();
+				st.pop();
+				if (rightOperand == 0) {
+					throw "cant divide by 0";
+				}
+				st.push(leftOperand / rightOperand);
+			}
+			else {
+				Number* thing = dynamic_cast<Number*>(postfix[i]);
+				double number = thing->GetValue();
+				st.push(number);
+			}
+		}
+		return st.top();
+	}
+};
+
 
 #endif
