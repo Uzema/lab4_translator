@@ -58,7 +58,7 @@ TEST(translator, stuff) {
 	std::cout << "print your thing: ";
 	//std::cin >> meow;
 	//std::getline(std::cin, meow);
-	Translator thing("3+5*2");
+	Translator thing("2*(32+15)");
 	thing.everything();
 	EXPECT_EQ(1, 1);
 }

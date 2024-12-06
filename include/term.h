@@ -14,6 +14,7 @@ enum class State {
 	Q2,
 	Q3,
 	Q4,
+	Q5,
 	ERROR
 };
 
@@ -150,6 +151,8 @@ public:
 class OpeningBracket : public Brackets {
 	
 public:
+	OpeningBracket() {}
+
 	string GetType() {
 		return "OpeningBracket";
 	}
@@ -158,6 +161,8 @@ public:
 class ClosingBracket : public Brackets {
 
 public:
+	ClosingBracket() {}
+
 	string GetType() {
 		return "ClosingBracket";
 	}
@@ -193,9 +198,9 @@ public:
 
 		State ka = State::S0;
 		string strNum = "";
+		int k = 0;
 
 		for (int i = 0; i < infix.size(); i++) {
-			int k = 0;
 
 			//cout << strNum << endl;
 
@@ -205,6 +210,20 @@ public:
 				ka = State::Q1;
 				strNum = "";
 				strNum += infix[i];
+				if (i == infix.size() - 1) {
+					double number = stod(strNum);
+					lexems.push_back(new Floating(number));
+					strNum = "";
+				}
+			}
+						  else if (infix[i] == '(') {
+				ka = State::Q3;
+				k += 1;
+				if (k < 0) {
+					ka = State::ERROR;
+					break;
+				}
+				lexems.push_back(new OpeningBracket());
 			}
 						  else {
 				ka = State::ERROR;
@@ -214,6 +233,11 @@ public:
 			case State::Q1: if (infix[i] >= '0' && infix[i] <= '9') {
 				ka = State::Q1;
 				strNum += infix[i];
+				if (i == infix.size() - 1) {
+					double number = stod(strNum);
+					lexems.push_back(new Floating(number));
+					strNum = "";
+				}
 			}
 						  else if (infix[i] == '.') {
 				ka = State::Q2;
@@ -235,6 +259,18 @@ public:
 					break;
 				}
 			}
+						  else if (infix[i] == ')') {
+				ka = State::Q5;
+				k -= 1;
+				if (k < 0) {
+					ka = State::ERROR;
+					break;
+				}
+				double number = stod(strNum);
+				lexems.push_back(new Floating(number));
+				strNum = "";
+				lexems.push_back(new ClosingBracket());
+			}
 						  else {
 				ka = State::ERROR;
 			}
@@ -243,6 +279,11 @@ public:
 			case State::Q2: if (infix[i] >= '0' && infix[i] <= '9') {
 				ka = State::Q2;
 				strNum += infix[i];
+				if (i == infix.size() - 1) {
+					double number = stod(strNum);
+					lexems.push_back(new Floating(number));
+					strNum = "";
+				}
 			}
 						  else if (infix[i] == '+' || infix[i] == '-' || infix[i] == '*' || infix[i] == '/') {
 				ka = State::Q4;
@@ -260,12 +301,45 @@ public:
 					break;
 				}
 			}
+						  else if (infix[i] == ')') {
+				ka = State::Q5;
+				k -= 1;
+				if (k < 0) {
+					ka = State::ERROR;
+					break;
+				}
+				double number = stod(strNum);
+				lexems.push_back(new Floating(number));
+				strNum = "";
+				lexems.push_back(new ClosingBracket());
+			}
 						  else {
 				ka = State::ERROR;
 			}
 						  break;
 
-			case State::Q3: break;
+			case State::Q3: if (infix[i] >= '0' && infix[i] <= '9') {
+				ka = State::Q1;
+				strNum += infix[i];
+				if (i == infix.size() - 1) {
+					double number = stod(strNum);
+					lexems.push_back(new Floating(number));
+					strNum = "";
+				}
+			}
+						  else if (infix[i] == '(') {
+				ka = State::Q3;
+				k += 1;
+				if (k < 0) {
+					ka = State::ERROR;
+					break;
+				}
+				lexems.push_back(new OpeningBracket());
+			}
+						  else {
+				ka = State::ERROR;
+			}
+				break;
 			case State::Q4: if (infix[i] >= '0' && infix[i] <= '9') {
 				ka = State::Q1;
 				strNum = "";
@@ -276,16 +350,48 @@ public:
 					strNum = "";
 				}
 			}
+						  else if (infix[i] == '(') {
+				ka = State::Q3;
+				k += 1;
+				if (k < 0) {
+					ka = State::ERROR;
+					break;
+				}
+				lexems.push_back(new OpeningBracket());
+			}
 						  else {
 				ka = State::ERROR;
 			}
 						  break;
+			case State::Q5: if (infix[i] == ')') {
+				ka = State::Q5;
+				k -= 1;
+				if (k < 0) {
+					ka = State::ERROR;
+					break;
+				}
+				lexems.push_back(new ClosingBracket());
+			}
+						  else if (infix[i] == '+' || infix[i] == '-' || infix[i] == '*' || infix[i] == '/') {
+				ka = State::Q4;
+				switch (infix[i]) {
+				case ('+'): lexems.push_back(new Add());
+					break;
+				case ('-'): lexems.push_back(new Sub());
+					break;
+				case ('*'): lexems.push_back(new Mul());
+					break;
+				case ('/'): lexems.push_back(new Div());
+					break;
+				}
+			}
+				break;
+			case State::ERROR: break;
 			default: ka = State::ERROR;
 				break;
-
 			}
 		}//for
-		return (ka != State::ERROR);
+		return (ka == State::Q1 || ka == State::Q2 || ka == State::Q5);
 	}
 
 	void ToPostFix() {
