@@ -15,6 +15,7 @@ enum class State {
 	Q3,
 	Q4,
 	Q5,
+	Unary,
 	ERROR
 };
 
@@ -179,15 +180,27 @@ public:
 		this->infix = infix_string;
 	}
 
+	double getAnswer() {
+		if (StringAnalyze() == true) {
+			ToPostFix();
+			double answer;
+			answer = Calculate();
+			return answer;
+		}
+		else {
+			throw "string analyze says you're a bad person";
+		}
+	}
+
 	void everything() {
 		if (StringAnalyze() == true) {
 			ToPostFix();
 			double answer;
 			answer = Calculate();
-			cout << "and the answer is :" << answer;
+			cout << "and the answer is: " << answer << endl;
 		}
 		else {
-			cout << "string analyze says you're a bad person";
+			cout << "string analyze says you're a bad person" << endl;
 		}
 	}
 
@@ -201,8 +214,6 @@ public:
 		int k = 0;
 
 		for (int i = 0; i < infix.size(); i++) {
-
-			//cout << strNum << endl;
 
 			switch (ka) {
 
@@ -225,6 +236,11 @@ public:
 				}
 				lexems.push_back(new OpeningBracket());
 			}
+						  else if (infix[i] == '-') {
+				ka = State::Unary;
+				lexems.push_back(new Floating(0));
+				lexems.push_back(new Sub());
+			}
 						  else {
 				ka = State::ERROR;
 			}
@@ -242,6 +258,11 @@ public:
 						  else if (infix[i] == '.') {
 				ka = State::Q2;
 				strNum += infix[i];
+				if (i == infix.size() - 1) {
+					double number = stod(strNum);
+					lexems.push_back(new Floating(number));
+					strNum = "";
+				}
 			}
 						  else if (infix[i] == '+' || infix[i] == '-' || infix[i] == '*' || infix[i] == '/') {
 				ka = State::Q4;
@@ -336,6 +357,11 @@ public:
 				}
 				lexems.push_back(new OpeningBracket());
 			}
+						  else if (infix[i] == '-') {
+				ka = State::Unary;
+				lexems.push_back(new Floating(0));
+				lexems.push_back(new Sub());
+			}
 						  else {
 				ka = State::ERROR;
 			}
@@ -386,16 +412,30 @@ public:
 				}
 			}
 				break;
+
+			case State::Unary: 
+				if (infix[i] >= '0' && infix[i] <= '9') {
+					ka = State::Q1;
+					strNum += infix[i];
+					if (i == infix.size() - 1) {
+						double number = stod(strNum);
+						lexems.push_back(new Floating(number));
+						strNum = "";
+					}
+				}
+				else {
+					ka = State::ERROR;
+				}
+				break;
 			case State::ERROR: break;
 			default: ka = State::ERROR;
 				break;
 			}
 		}//for
-		return (ka == State::Q1 || ka == State::Q2 || ka == State::Q5);
+		return ((ka == State::Q1 || ka == State::Q2 || ka == State::Q5) && (k==0));
 	}
 
 	void ToPostFix() {
-		//Parse();
 		Stack<Term*, vector> st;
 		Term* stackItem;
 		for (int i = 0; i < lexems.size(); i++) {
@@ -413,20 +453,27 @@ public:
 			}
 			else if (lexems[i]->GetType() == "Add" || lexems[i]->GetType() == "Sub" || \
 				lexems[i]->GetType() == "Mul" || lexems[i]->GetType() == "Div") {
-				while (!st.empty()) {
-					stackItem = st.top();
-					st.pop();
-					Operators* op1 = dynamic_cast<Operators*>(lexems[i]);
-					Operators* op2 = dynamic_cast<Operators*>(stackItem);
-					if (op1->GetPriority() <= op2->GetPriority()) {
-						postfix.push_back(stackItem);
-					}
-					else {
-						st.push(stackItem);
-						break;
+				if (st.empty() || st.top()->GetType() == "OpeningBracket") {
+					st.push(lexems[i]);
+				}
+				else {
+					while (!st.empty() && st.top()->GetType() != "OpeningBracket") {
+						stackItem = st.top();
+						st.pop();
+						Operators* op1 = dynamic_cast<Operators*>(lexems[i]);
+						Operators* op2 = dynamic_cast<Operators*>(stackItem);
+						if (op1->GetPriority() <= op2->GetPriority()) {
+							postfix.push_back(stackItem);
+							st.push(lexems[i]);
+							break;
+						}
+						else {
+							st.push(stackItem);
+							st.push(lexems[i]);
+							break;
+						}
 					}
 				}
-				st.push(lexems[i]);
 			}
 			else {
 				postfix.push_back(lexems[i]);
@@ -443,7 +490,6 @@ public:
 		Stack<double, vector> st;
 		double leftOperand, rightOperand;
 		for (int i = 0; i < postfix.size(); i++) {
-			cout << postfix[i]->GetType() << endl;
 			if (postfix[i]->GetType() == "Add") {
 				rightOperand = st.top();
 				st.pop();
