@@ -6,7 +6,15 @@ int main(int argc, char** argv) {
         std::cout << "print your expression: ";
         std::getline(std::cin, infix_string);
         Translator tr(infix_string);
-        tr.everything();
+        try {
+            tr.everything();
+        }
+        catch (const char* e) {
+            std::cout << "Caught an exception: " << e << std::endl;
+        }
+        catch (...) {
+            std::cout << "Unknown exception" << std::endl;
+        }
     }
     return 0;
 }
