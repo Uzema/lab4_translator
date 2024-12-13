@@ -177,6 +177,7 @@ class Translator {
 
 public:
 	Translator(string infix_string) {
+		infix_string.erase(remove_if(infix_string.begin(), infix_string.end(), isspace), infix_string.end());
 		this->infix = infix_string;
 	}
 
