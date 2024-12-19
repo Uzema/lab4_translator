@@ -14,6 +14,7 @@
 |000.00+100.00|100|
 |3*(2+1)|9|
 |-1+2|1|
+|15    + 23</pre>|38|
 |(-1+1)/0|Caught an exception: cant divide by 0|
 |(2+1|String analyze spotted incorrect expression|
 ||Caught an exception: empty string|
