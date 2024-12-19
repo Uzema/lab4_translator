@@ -177,6 +177,7 @@ class Translator {
 
 public:
 	Translator(string infix_string) {
+		infix_string.erase(remove_if(infix_string.begin(), infix_string.end(), isspace), infix_string.end());
 		this->infix = infix_string;
 	}
 
@@ -188,7 +189,7 @@ public:
 			return answer;
 		}
 		else {
-			throw "string analyze says you're a bad person";
+			throw "Incorrect expression";
 		}
 	}
 
@@ -200,7 +201,7 @@ public:
 			cout << "and the answer is: " << answer << endl;
 		}
 		else {
-			cout << "string analyze says you're a bad person" << endl;
+			cout << "String analyze spotted incorrect expression" << endl;
 		}
 	}
 
