@@ -189,7 +189,7 @@ public:
 			return answer;
 		}
 		else {
-			throw "string analyze says you're a bad person";
+			throw "Incorrect expression";
 		}
 	}
 
@@ -201,7 +201,7 @@ public:
 			cout << "and the answer is: " << answer << endl;
 		}
 		else {
-			cout << "string analyze says you're a bad person" << endl;
+			cout << "String analyze spotted incorrect expression" << endl;
 		}
 	}
 
