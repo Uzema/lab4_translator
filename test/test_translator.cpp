@@ -1,9 +1,19 @@
 #include "term.h"
 #include <gtest.h>
 
-TEST(translator, stuff) {
-	Translator thing("1+(2+3*4)/5+6*7*(8+(9+0))");
-	EXPECT_EQ(717.8, thing.getAnswer());
+TEST(translator, PanovaTest) {
+	Translator tr("(1.0/2+2)*3-1*(2-3*4)+1");
+	EXPECT_EQ(18.5, tr.getAnswer());
+}
+
+TEST(translator, CanBreak) {
+	Translator tr("-3*4+1");
+	EXPECT_EQ(-11, tr.getAnswer());
+}
+
+TEST(translator, LongExpr) {
+	Translator tr("1+(2+3*4)/5+6*7*(8+(9+0))");
+	EXPECT_EQ(717.8, tr.getAnswer());
 }
 
 TEST(translator, AddCorrectly) {
@@ -80,3 +90,4 @@ TEST(translator, ThrowsWhenDifferentAmountOfBrackets) {
 	Translator tr("((5+5)");
 	ASSERT_ANY_THROW(tr.getAnswer());
 }
+

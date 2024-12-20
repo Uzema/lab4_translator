@@ -412,6 +412,9 @@ public:
 					break;
 				}
 			}
+						  else {
+				ka = State::ERROR;
+			}
 				break;
 
 			case State::Unary: 
@@ -459,21 +462,17 @@ public:
 				}
 				else {
 					while (!st.empty() && st.top()->GetType() != "OpeningBracket") {
-						stackItem = st.top();
-						st.pop();
 						Operators* op1 = dynamic_cast<Operators*>(lexems[i]);
-						Operators* op2 = dynamic_cast<Operators*>(stackItem);
-						if (op1->GetPriority() <= op2->GetPriority()) {
-							postfix.push_back(stackItem);
-							st.push(lexems[i]);
-							break;
+						Operators* op2 = dynamic_cast<Operators*>(st.top());
+						if (op2 && op2->GetPriority() >= op1->GetPriority()) {
+							postfix.push_back(st.top());
+							st.pop();
 						}
 						else {
-							st.push(stackItem);
-							st.push(lexems[i]);
 							break;
 						}
 					}
+					st.push(lexems[i]);
 				}
 			}
 			else {
