@@ -177,6 +177,7 @@ class Translator {
 
 public:
 	Translator(string infix_string) {
+		infix_string.erase(remove_if(infix_string.begin(), infix_string.end(), isspace), infix_string.end());
 		this->infix = infix_string;
 	}
 
@@ -188,7 +189,7 @@ public:
 			return answer;
 		}
 		else {
-			throw "string analyze says you're a bad person";
+			throw "Incorrect expression";
 		}
 	}
 
@@ -200,7 +201,7 @@ public:
 			cout << "and the answer is: " << answer << endl;
 		}
 		else {
-			cout << "string analyze says you're a bad person" << endl;
+			cout << "String analyze spotted incorrect expression" << endl;
 		}
 	}
 
@@ -411,6 +412,9 @@ public:
 					break;
 				}
 			}
+						  else {
+				ka = State::ERROR;
+			}
 				break;
 
 			case State::Unary: 
@@ -458,21 +462,17 @@ public:
 				}
 				else {
 					while (!st.empty() && st.top()->GetType() != "OpeningBracket") {
-						stackItem = st.top();
-						st.pop();
 						Operators* op1 = dynamic_cast<Operators*>(lexems[i]);
-						Operators* op2 = dynamic_cast<Operators*>(stackItem);
-						if (op1->GetPriority() <= op2->GetPriority()) {
-							postfix.push_back(stackItem);
-							st.push(lexems[i]);
-							break;
+						Operators* op2 = dynamic_cast<Operators*>(st.top());
+						if (op2 && op2->GetPriority() >= op1->GetPriority()) {
+							postfix.push_back(st.top());
+							st.pop();
 						}
 						else {
-							st.push(stackItem);
-							st.push(lexems[i]);
 							break;
 						}
 					}
+					st.push(lexems[i]);
 				}
 			}
 			else {
